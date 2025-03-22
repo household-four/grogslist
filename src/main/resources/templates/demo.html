@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Grogslist - Intergalactic Marketplace</title>
+  <link href="/demo.css" rel="stylesheet" />
+  
+
+</head>
+
+<body>
+  <h1>Grogslist - Intergalactic Marketplace</h1>
+
+  <section>
+    <h2>Your one-stop-shop for secondhand products throughout the cosmos</h2>
+    
+    <table id="productsTable">
+      <thead>
+        <tr>
+          <th>Id</th>
+          <th>Product</th>
+          <th>Price (Galactic Credits)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Dynamic -->
+      </tbody>
+    </table>
+    <button id="refreshBtn">Refresh Table</button>
+  </section>
+
+  <section style="margin-top: 2rem;">
+    <h2>Selling? Enter your product here:</h2>
+    <form id="addProductForm">
+      <div>
+        <label for="productName">Name:</label>
+        <input id="productName" name="productName" type="text" required />
+      </div>
+      <div>
+        <label for="productPrice">Price:</label>
+        <input id="productPrice" name="productPrice" type="number" required />
+      </div>
+      <button type="submit">Add Product</button>
+    </form>
+  </section>
+  <script>
+    const productsTableBody = document.querySelector('#productsTable tbody');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const addProductForm = document.getElementById('addProductForm');
+
+    // Function to load all products from the server
+    async function loadProducts() {
+      try {
+        const response = await fetch('/products');
+        if (!response.ok) {
+          throw new Error('Failed to fetch products');
+        }
+        const products = await response.json();
+        renderProducts(products);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    // Render products into the table
+    function renderProducts(products) {
+      productsTableBody.innerHTML = ''; 
+
+      products.forEach(product => {
+        const row = document.createElement('tr');
+        const idCell = document.createElement('td');
+        const nameCell = document.createElement('td');
+        const priceCell = document.createElement('td');
+
+        idCell.textContent = product.id;
+        nameCell.textContent = product.name;
+        priceCell.textContent = product.price;
+
+        row.appendChild(idCell);
+        row.appendChild(nameCell);
+        row.appendChild(priceCell);
+
+        productsTableBody.appendChild(row);
+      });
+    }
+
+    // New product form submission
+    addProductForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const productName = document.getElementById('productName').value;
+      const productPrice = parseInt(document.getElementById('productPrice').value, 10);
+
+      const productData = { name: productName, price: productPrice };
+
+      try {
+        const response = await fetch('/products', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(productData)
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to create product');
+        }
+
+        addProductForm.reset();
+        
+        /*
+        HINT: You could call loadProducts() here to refresh the table, 
+        but that would defeat the purpose of this exercise (plus, it's inefficient). 
+        Instead, you should use Server-Sent Events to update the table.
+        */
+
+      } catch (error) {
+        console.error(error);
+      }
+    });
+
+    refreshBtn.addEventListener('click', loadProducts);
+
+    /*
+    HINT: You need to establish a connection to the server to listen for updates.
+    */
+
+    // Loads products on init
+    loadProducts();
+
+  </script>
+</body>
+
+</html>
